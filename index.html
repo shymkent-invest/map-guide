@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Индустриальные проекты Шымкента</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    .form-popup {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .form-popup input, .form-popup textarea {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    #projectList {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="form-popup" id="projectForm" style="display:none;">
+    <strong>Добавить проект</strong><br/>
+    <input type="text" id="projName" placeholder="Название проекта" />
+    <textarea id="projDesc" placeholder="Описание"></textarea>
+    <button onclick="saveProject()">Сохранить</button>
+  </div>
+
+  <div id="projectList"><strong>Проекты:</strong><ul id="projectItems"></ul></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script>
+    const map = L.map('map').setView([42.3417, 69.5901], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+      edit: { featureGroup: drawnItems },
+      draw: { polygon: true, marker: true, rectangle: true, polyline: false, circle: false, circlemarker: false }
+    });
+    map.addControl(drawControl);
+
+    let currentLayer = null;
+    const projects = [];
+
+    map.on(L.Draw.Event.CREATED, function (event) {
+      currentLayer = event.layer;
+      document.getElementById('projectForm').style.display = 'block';
+    });
+
+    function saveProject() {
+      const name = document.getElementById('projName').value;
+      const desc = document.getElementById('projDesc').value;
+      if (!name) return alert("Введите название проекта");
+      currentLayer.bindPopup(`<strong>${name}</strong><br>${desc}`);
+      drawnItems.addLayer(currentLayer);
+      projects.push({ name, desc });
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${name}</strong>: ${desc}`;
+      document.getElementById('projectItems').appendChild(li);
+      document.getElementById('projectForm').style.display = 'none';
+      document.getElementById('projName').value = '';
+      document.getElementById('projDesc').value = '';
+    }
+  </script>
+</body>
+</html>
